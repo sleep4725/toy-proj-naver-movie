@@ -1,5 +1,6 @@
 import os
 import sys
+from unicodedata import category
 PROJ_ROOT_PATH = os.path.abspath(os.path.dirname(__file__)) 
 for _ in range(2):
     PROJ_ROOT_PATH = os.path.dirname(PROJ_ROOT_PATH)
@@ -18,6 +19,7 @@ try:
     from client.SeleniumClient import SeleniumClient
     from util.TimeUtil import TimeUtil
     from es.Client import EsClient
+    #from db.MySQLClient import MySQLClient
 except ImportError as err:
     print(err)
 
@@ -31,6 +33,8 @@ class CllctDrama(ModelDrama, EsClient, EsCommon):
         ModelDrama.__init__(self)
         EsCommon.__init__(self)
         EsClient.__init__(self) # Elasticsearch Client model setting
+        #MySQLClient.__init__(self)
+        
         self.baseUrl = CommonUrl.getBaseUrl()
         self.cllctTime = TimeUtil.getCllctTime()
         self.category = Category.getCategoryInformation(ModelDrama.TG) 
@@ -75,7 +79,7 @@ class CllctDrama(ModelDrama, EsClient, EsCommon):
                     self.action.append(
                         {
                             "_index": self.index
-                            ,"_type": str(self.category)
+                            ,"_type": self.category
                             ,"_source": e
                         }
                     )

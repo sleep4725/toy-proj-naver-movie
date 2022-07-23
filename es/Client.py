@@ -1,16 +1,24 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 import yaml 
-import socket
 import os
+import sys
 PROJ_ROOT_PATH = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+sys.path.append(PROJ_ROOT_PATH)
 
+try:
+    
+    from common.IsServiceAlive import Server
+except ImportError as err:
+    print(err)
 ##
 # @author JunHyeon.Kim
 # @date 20220723
 ## --------------------------
 class EsClient:
     
+    _FLAG_ = "ES"
+      
     def __init__(self) -> None:
         self.esClient = EsClient.getEsClient() 
         self.action = list()
@@ -21,28 +29,6 @@ class EsClient:
             
         bulk(self.esClient, actions= self.action)
     
-    @classmethod
-    def isServiceAlive(cls, esConfig)-> bool:
-        '''
-        :param:
-        :return:
-        '''
-        isGood = True 
-        for host in esConfig["esHosts"]:
-            print(host)
-            s = socket.socket()
-        
-            try:
-                
-                s.connect((host, esConfig["esPort"]))
-            except ConnectionRefusedError as err:
-                print(err)
-                isGood = False   
-                break
-            
-        
-        return isGood 
-         
     @classmethod 
     def getEsClient(cls)-> Elasticsearch:
         '''
@@ -60,9 +46,14 @@ class EsClient:
                 with open(esConfigFile, "r", encoding="utf-8") as es:
                     esConfig = yaml.safe_load(es)
                     es.close()
-                    if EsClient.isServiceAlive(esConfig=esConfig):
-                        '''http://'''
-                        esHosts = [f"{esConfig['esHttp']}://{e}:{esConfig['esPort']}" for e in esConfig["esHosts"]]
+                    
+                    isAlive = Server.isServiceAlive(
+                        config= esConfig
+                        ,category_key= EsClient._FLAG_
+                    )
+                    if isAlive:
+                        ES = esConfig[EsClient._FLAG_] 
+                        esHosts = [f"{ES['http']}://{e}:{ES['port']}" for e in ES["host"]]
                         print(f"**esHosts => {esHosts}") 
                         
                         try:
