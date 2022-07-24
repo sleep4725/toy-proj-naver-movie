@@ -19,7 +19,7 @@ try:
     from client.SeleniumClient import SeleniumClient
     from util.TimeUtil import TimeUtil
     from es.Client import EsClient
-    #from db.MySQLClient import MySQLClient
+    from db.MySQLClient import MySQLClient
 except ImportError as err:
     print(err)
 
@@ -27,25 +27,32 @@ except ImportError as err:
 @author JunHyeon.Kim
 @date 20220723
 '''
-class CllctDrama(ModelDrama, EsClient, EsCommon):
+class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
 
     def __init__(self) -> None:
         ModelDrama.__init__(self)
         EsCommon.__init__(self)
         EsClient.__init__(self) # Elasticsearch Client model setting
-        #MySQLClient.__init__(self)
+        MySQLClient.__init__(self)
         
         self.baseUrl = CommonUrl.getBaseUrl()
         self.cllctTime = TimeUtil.getCllctTime()
         self.category = Category.getCategoryInformation(ModelDrama.TG) 
-        
+    
+    def insertMySQL(self, totalCount: int):
+        '''
+        :param:
+        :return:
+        '''
+        print(f"** Elasticsearch insert totalCount : {totalCount}")        
+    
     def getData(self):
         '''
         :param:
         :return:ß
         '''
-        # Year ----
-        
+        totalCount = 0
+        # Year ----    
         reqUrl = self.baseUrl + "?" + self.urlParam + "&date=20220721"
         
         print(f"** reqUrl: {reqUrl}")
@@ -83,7 +90,9 @@ class CllctDrama(ModelDrama, EsClient, EsCommon):
                             ,"_source": e
                         }
                     )
-
+                    # row count increase
+                    totalCount = totalCount + 1
+                    
             # Elastifcsearch 에 데이터 적재
             self.dataBulkInsert()
             
@@ -91,6 +100,7 @@ class CllctDrama(ModelDrama, EsClient, EsCommon):
             self.action.clear()
         chromeClient.close()
         # getData function end =======================
+        self.insertMySQL(totalCount= totalCount)
         
 if __name__ == "__main__":
     print(f"** PROJ_ROOT_PATH: {PROJ_ROOT_PATH}")

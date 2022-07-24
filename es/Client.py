@@ -7,7 +7,7 @@ PROJ_ROOT_PATH = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 sys.path.append(PROJ_ROOT_PATH)
 
 try:
-    
+    from customexc.ExceptionSeviseClose import ExceptionServiceClose
     from common.IsServiceAlive import Server
 except ImportError as err:
     print(err)
@@ -25,10 +25,19 @@ class EsClient:
     
     def dataBulkInsert(self):
         '''
+        :param:
+        :return:
         '''
-            
-        bulk(self.esClient, actions= self.action)
-    
+        print(f"self.action.size : {len(self.action)}")
+        if len(self.action) != 0: 
+            try: 
+                
+                bulk(self.esClient, actions= self.action)
+            except:
+                print("bulk insert error")
+        else:
+            print("적재할 수 있는 데이터가 없습니다.")
+                
     @classmethod 
     def getEsClient(cls)-> Elasticsearch:
         '''
@@ -69,5 +78,6 @@ class EsClient:
                                 return None
                     else:
                         print("node가 죽어있는것 같아") 
+                        raise ExceptionServiceClose                      
         else:
             raise FileNotFoundError

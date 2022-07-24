@@ -1,4 +1,6 @@
 import socket
+import subprocess
+from urllib import response
 
 '''
 @author JunHyeon.Kim
@@ -9,22 +11,40 @@ class Server:
     @classmethod
     def isServiceAlive(cls, config, category_key)-> bool:
         '''
+        :param:
+        :return:
+        ''' 
+        isAliveCheck = True
+        port = config[category_key]["port"] 
+        respCode, _ = subprocess.getstatusoutput(f"lsof -n -i :{port} | grep LISTEN")
+
+        if not respCode:
+            return isAliveCheck
+        else:
+            isAliveCheck = False
+            return isAliveCheck
+        
+    @classmethod
+    def isServiceAliveOldVersion(cls, config, category_key)-> bool:
+        '''
         :param config:
         :param k:
         :param servicePort:
         :param category:
         :return:
         '''
-        isGood = True
+        isAliveCheck = True
         port = config[category_key]["port"]
         for host in config[category_key]["host"]:
-            s= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = s.connect_ex((host, port))
+            print(f"{category_key} service alive check host: {host} | port: {port}")
             
-            if result == 0:
-                print(f"{category_key} service open~")
-            else:
-                isGood = False
-                print(f"{category_key} service close~") 
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 
-        return isGood
+            if sock.connect_ex((host, port)) == 0:
+                print("Port is open~!!")
+            else:
+                print("Port is not open")
+                isAliveCheck = False
+                break
+        
+        return isAliveCheck

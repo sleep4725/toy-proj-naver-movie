@@ -1,4 +1,3 @@
-import pymysql 
 import yaml
 import os
 import sys
@@ -7,6 +6,7 @@ sys.path.append(PROJ_ROOT_PATH)
 
 try:
     
+    import pymysql     
     from common.IsServiceAlive import Server
 except ImportError as err:
     print(err)
@@ -44,11 +44,12 @@ class MySQLClient:
                     )
                     if isAlive:
                         MYSQL = connConfig[MySQLClient._FLAG_]
+                        print(MYSQL)
                         conn = pymysql.connect(
-                            host= MYSQL["host"], 
+                            host= MYSQL["host"][0], 
                             user= MYSQL["user"], 
                             password= MYSQL["password"], 
-                            charset="utf-8")
+                            charset="utf8")
                         
                         return conn
                     else:
