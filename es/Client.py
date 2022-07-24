@@ -1,5 +1,7 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
+from elasticsearch.helpers import errors
+
 import yaml 
 import os
 import sys
@@ -30,11 +32,13 @@ class EsClient:
         '''
         print(f"self.action.size : {len(self.action)}")
         if len(self.action) != 0: 
-            try: 
+            try:
                 
                 bulk(self.esClient, actions= self.action)
-            except:
-                print("bulk insert error")
+            except errors.BulkIndexError as err:
+                print(err)
+            else:
+                print("bulk insert success")   
         else:
             print("적재할 수 있는 데이터가 없습니다.")
                 

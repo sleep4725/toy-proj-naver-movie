@@ -7,6 +7,40 @@ from elasticsearch import Elasticsearch
 class EsService:
     
     @classmethod
+    def rmDocument(cls, paramDate: str):
+        '''
+        '''
+        query = {
+            "query": {
+                "term" : {
+                    "date_col" : {
+                        "value": paramDate
+                    }
+                }
+            }
+        }
+
+        return query
+
+    @classmethod
+    def getDateQuery(cls):
+        '''
+        :param:
+        :return:
+        '''
+        query = {
+            "size": 1
+            ,"_source": ["date_col"]
+            ,"sort": [
+                {
+                    "date_col.keyword": {"order": "desc"}
+                }
+            ]
+        }
+        
+        return query
+        
+    @classmethod
     def getDocumentTotalCount(cls, esClient: Elasticsearch, index: str)-> int:
         '''
         :param:

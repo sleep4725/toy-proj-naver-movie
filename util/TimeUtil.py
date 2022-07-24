@@ -16,3 +16,11 @@ class TimeUtil:
         print(f"** cllctTime : {cllctTime}")
         
         return cllctTime
+    
+    @classmethod
+    def getTodayTime(cls):
+        '''
+        '''
+        cllctTime = time.strftime("%Y%m%d", time.localtime())
+        print(f"[getTodayTime] {cllctTime}")
+        return cllctTime

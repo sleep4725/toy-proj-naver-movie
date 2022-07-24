@@ -1,6 +1,6 @@
 import os
 import sys
-from unicodedata import category
+
 PROJ_ROOT_PATH = os.path.abspath(os.path.dirname(__file__)) 
 for _ in range(2):
     PROJ_ROOT_PATH = os.path.dirname(PROJ_ROOT_PATH)
@@ -8,6 +8,7 @@ for _ in range(2):
 sys.path.append(PROJ_ROOT_PATH)
 
 from bs4 import BeautifulSoup
+import json
 
 try:
     
@@ -19,6 +20,7 @@ try:
     from client.SeleniumClient import SeleniumClient
     from util.TimeUtil import TimeUtil
     from es.Client import EsClient
+    from es.EsService import EsService
     from db.MySQLClient import MySQLClient
 except ImportError as err:
     print(err)
@@ -39,6 +41,39 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
         self.cllctTime = TimeUtil.getCllctTime()
         self.category = Category.getCategoryInformation(ModelDrama.TG) 
     
+    def hitDocumentDelete(self, paramDate):
+        '''
+        :param:
+        :return:
+        '''
+        query = EsService.rmDocument(paramDate= paramDate)
+        try:
+            
+            self.esClient.delete_by_query(body=query, index="es_time_range") 
+        except:
+            print(f"[{paramDate}] date delete fail !!")
+        else:
+            print(f"[{paramDate}] date delete success !!")
+        
+    def getEsCllctTime(self)-> str:
+        '''
+        :param:
+        :return:
+        '''
+        query = EsService.getDateQuery()
+        response = self.esClient.search(body=query, index="es_time_range")
+        date_col= dict(
+            json.loads(
+                json.dumps(
+                    response, ensure_ascii=False, indent=3, sort_keys=True
+                )
+            )
+        ) 
+        
+        date = date_col["hits"]["hits"][0]["_source"]["date_col"]
+        
+        return date 
+         
     def insertMySQL(self, totalCount: int):
         '''
         :param:
@@ -52,8 +87,11 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
         :return:ß
         '''
         totalCount = 0
+        
+        cllct = self.getEsCllctTime()
+        
         # Year ----    
-        reqUrl = self.baseUrl + "?" + self.urlParam + "&date=20220721"
+        reqUrl = self.baseUrl + "?" + self.urlParam + "&date=" + cllct 
         
         print(f"** reqUrl: {reqUrl}")
         chromeClient = SeleniumClient.getChromeObject()
@@ -82,7 +120,6 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
                     e["mv_title"] = aTag.attrs["title"] 
                     e["mv_category"] = self.category 
                     e["cllct_time"] = self.cllctTime
-                    print(e)
                     self.action.append(
                         {
                             "_index": self.index
@@ -101,6 +138,7 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
         chromeClient.close()
         # getData function end =======================
         self.insertMySQL(totalCount= totalCount)
+        self.hitDocumentDelete(paramDate=cllct)
         
 if __name__ == "__main__":
     print(f"** PROJ_ROOT_PATH: {PROJ_ROOT_PATH}")
