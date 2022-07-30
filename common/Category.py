@@ -15,3 +15,5 @@ class Category:
             return information[checkNum]
         else:
             return "null"
+        
+        

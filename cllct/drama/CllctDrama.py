@@ -84,7 +84,7 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
     def getData(self):
         '''
         :param:
-        :return:ß
+        :return:
         '''
         totalCount = 0
         
@@ -115,20 +115,29 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
                     movieRanking = movieRanking + 1
                     aTag = element.select_one("td.title > div.tit3 > a")
                     e = ElementTemplate.getTemplate()
-                    e["mv_access_url"] = aTag.attrs["href"]
-                    e["mv_ranking"] = movieRanking
-                    e["mv_title"] = aTag.attrs["title"] 
-                    e["mv_category"] = self.category 
-                    e["cllct_time"] = self.cllctTime
-                    self.action.append(
-                        {
-                            "_index": self.index
-                            ,"_type": self.category
-                            ,"_source": e
-                        }
-                    )
-                    # row count increase
-                    totalCount = totalCount + 1
+                    try:
+                        
+                        e["mv_access_url"] = aTag.attrs["href"]
+                        e["mv_ranking"] = movieRanking
+                        e["mv_title"] = aTag.attrs["title"] 
+                        e["mv_category"] = self.category 
+                        e["cllct_time"] = self.cllctTime
+                    except AttributeError as err:
+                        print(err)
+                    else:
+                        self.action.append(
+                            {
+                                "_index": self.index
+                                ,"_type": self.category
+                                ,"_source": {
+                                    **e,
+                                    "insert_time": cllct
+                                }
+                            }
+                        )
+                    finally:
+                        # row count increase
+                        totalCount = totalCount + 1
                     
             # Elastifcsearch 에 데이터 적재
             self.dataBulkInsert()

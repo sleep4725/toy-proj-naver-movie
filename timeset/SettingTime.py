@@ -34,8 +34,3 @@ class TimeSetup(EsClient):
             }) 
         
         self.dataBulkInsert()
-            
-if __name__ == "__main__":
-    o = TimeSetup()
-    o.getTimeRange()
-    
