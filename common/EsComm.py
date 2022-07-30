@@ -5,4 +5,4 @@
 class EsCommon:
     
     def __init__(self) -> None:
-        self.index = "naver_movie"
+        self.index = "naver-movie"

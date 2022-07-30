@@ -1,3 +1,4 @@
+# cllct.fantasy.CllctFantasy
 import os
 import sys
 from datetime import datetime
@@ -14,7 +15,8 @@ import base64
 
 try:
     
-    from model.drama.ModelDrama import ModelDrama 
+    from model.fantasy.ModelFantasy import ModelFantasy 
+    
     from common.CommonUrl import CommonUrl
     from common.Category import Category
     from common.ElementTemplate import ElementTemplate
@@ -24,6 +26,7 @@ try:
     from es.Client import EsClient
     from es.EsService import EsService
     from db.MySQLClient import MySQLClient
+    from trigger.seleniumrun import SeleniumRunProcess 
 except ImportError as err:
     print(err)
 
@@ -31,17 +34,18 @@ except ImportError as err:
 @author JunHyeon.Kim
 @date 20220723
 '''
-class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
+class CllctFantasy(ModelFantasy, EsClient, EsCommon, MySQLClient, SeleniumRunProcess):
 
     def __init__(self) -> None:
-        ModelDrama.__init__(self)
+        ModelFantasy.__init__(self)
         EsCommon.__init__(self)
         EsClient.__init__(self) # Elasticsearch Client model setting
         MySQLClient.__init__(self)
+        SeleniumRunProcess.__init__(self)        
                 
         self.baseUrl = CommonUrl.getBaseUrl()
         self.cllctTime = TimeUtil.getCllctTime()
-        self.category = Category.getCategoryInformation(ModelDrama.TG) 
+        self.category = Category.getCategoryInformation(ModelFantasy.TG) 
     
     def hitDocumentDelete(self, paramDate):
         '''
@@ -90,6 +94,7 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
         :return:
         '''
         totalCount = 0
+        self.run()
         cllct = self.getEsCllctTime()
         
         # Year ----    
@@ -158,9 +163,9 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
         # getData function end =======================
         self.insertMySQL(totalCount= totalCount)
         self.hitDocumentDelete(paramDate=cllct)
-
+        
 if __name__ == "__main__":
 
     print(f"** PROJ_ROOT_PATH: {PROJ_ROOT_PATH}")
-    o = CllctDrama()
+    o = CllctFantasy()
     o.getData()

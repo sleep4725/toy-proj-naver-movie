@@ -24,65 +24,11 @@ try:
     from es.Client import EsClient
     from es.EsService import EsService
     from db.MySQLClient import MySQLClient
+    from trigger.seleniumrun import SeleniumRunProcess 
 except ImportError as err:
     print(err)
-
-'''
-@author JunHyeon.Kim
-@date 20220723
-'''
-class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
-
-    def __init__(self) -> None:
-        ModelDrama.__init__(self)
-        EsCommon.__init__(self)
-        EsClient.__init__(self) # Elasticsearch Client model setting
-        MySQLClient.__init__(self)
-                
-        self.baseUrl = CommonUrl.getBaseUrl()
-        self.cllctTime = TimeUtil.getCllctTime()
-        self.category = Category.getCategoryInformation(ModelDrama.TG) 
     
-    def hitDocumentDelete(self, paramDate):
-        '''
-        :param:
-        :return:
-        '''
-        query = EsService.rmDocument(paramDate= paramDate)
-        try:
-            
-            self.esClient.delete_by_query(body=query, index="es_time_range") 
-        except:
-            print(f"[{paramDate}] date delete fail !!")
-        else:
-            print(f"[{paramDate}] date delete success !!")
-        
-    def getEsCllctTime(self):
-        '''
-        :param:
-        :return:
-        '''
-        query = EsService.getDateQuery()
-        response = self.esClient.search(body=query, index="es_time_range")
-        date_col= dict(
-            json.loads(
-                json.dumps(
-                    response, ensure_ascii=False, indent=3, sort_keys=True
-                )
-            )
-        )  
-         
-        date = date_col["hits"]["hits"][0]["_source"]["date_col"]
-        date_time_obj = datetime.strptime(date, '%Y%m%d')
-        date_time_obj = str(date_time_obj).split(" ")[0].replace("-", "")
-        return date_time_obj 
-         
-    def insertMySQL(self, totalCount: int):
-        '''
-        :param:
-        :return:
-        '''
-        print(f"** Elasticsearch insert totalCount : {totalCount}")        
+class CllctComm:
     
     def getData(self):
         '''
@@ -90,6 +36,7 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
         :return:
         '''
         totalCount = 0
+        self.run()
         cllct = self.getEsCllctTime()
         
         # Year ----    
@@ -101,7 +48,7 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
         chromeClient.get(reqUrl)
         chromeClient.implicitly_wait(3)
         bsObject = BeautifulSoup(chromeClient.page_source, "html.parser")
-             
+                
         listRanking = bsObject.select_one("table.list_ranking")
         trList = listRanking.select_one("tbody").select("tr")
 
@@ -158,9 +105,3 @@ class CllctDrama(ModelDrama, EsClient, EsCommon, MySQLClient):
         # getData function end =======================
         self.insertMySQL(totalCount= totalCount)
         self.hitDocumentDelete(paramDate=cllct)
-
-if __name__ == "__main__":
-
-    print(f"** PROJ_ROOT_PATH: {PROJ_ROOT_PATH}")
-    o = CllctDrama()
-    o.getData()
